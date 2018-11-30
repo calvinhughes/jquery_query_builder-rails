@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe JqueryQueryBuilder::RuleGroup do
-  let(:decimal_rule){
+  let(:decimal_rule) do
     {
       'id' =>     "Decimal_Question",
       'field' =>  "Decimal_Question",
@@ -10,8 +10,8 @@ describe JqueryQueryBuilder::RuleGroup do
       'operator' => "equal",
       'value' =>  "1.2"
     }
-  }
-  let(:boolean_rule){
+  end
+  let(:boolean_rule) do
     {
       "id" => "Yes_No_Question",
       "field" => "Yes_No_Question",
@@ -20,7 +20,17 @@ describe JqueryQueryBuilder::RuleGroup do
       "operator" => "equal",
       "value" => "true"
     }
-  }
+  end
+  let(:not_contains_rule) do
+    {
+      "id" => "Subject_Query",
+      "field" => "Subject_Query",
+      "type" => "string",
+      "input" => "select",
+      "operator" => "not_contains",
+      "value" => "[Urgent]"
+    }
+  end
 
   describe '#new' do
     it 'should initialize a new rule group and get the conditions and rules' do
@@ -35,23 +45,36 @@ describe JqueryQueryBuilder::RuleGroup do
 
   describe '#evaluate' do
     context 'AND' do
-      let(:rules){[decimal_rule, boolean_rule]}
-      let(:evaluator){
+      let(:rules) do
+        [decimal_rule, boolean_rule, not_contains_rule]
+      end
+
+      let(:evaluator) do
         JqueryQueryBuilder::RuleGroup.new({
           'condition' => 'AND',
           'rules' => rules
         })
-      }
-      it 'should returns true if all are true' do
-        expect(evaluator.evaluate({"Decimal_Question" => 1.2, "Yes_No_Question" => true})).to eq true
       end
+
+      it 'should returns true if all are true' do
+        expect(evaluator.evaluate({"Decimal_Question" => 1.2, "Yes_No_Question" => true, "Subject_Query" => "[Low]"})).to eq true
+      end
+
       it 'should return false if any are false' do
-        expect(evaluator.evaluate({"Decimal_Question" => 1.2, "Yes_No_Question" => false})).to eq false
+        expect(evaluator.evaluate({"Decimal_Question" => 1.2, "Yes_No_Question" => false, "Subject_Query" => "[Urgent]"})).to eq false
+      end
+
+      context 'with a rule that is not_contains' do
+        context 'when a field is not passed' do
+          it 'should return false' do
+            expect(evaluator.evaluate({"Decimal_Question" => 1.2, "Yes_No_Question" => true})).to eq false
+          end
+        end
       end
     end
 
     context 'OR' do
-      let(:rules){[decimal_rule, boolean_rule]}
+      let(:rules){[decimal_rule, boolean_rule, not_contains_rule]}
       let(:evaluator){
         JqueryQueryBuilder::RuleGroup.new({
           'condition' => 'OR',

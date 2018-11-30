@@ -11,7 +11,10 @@ module JqueryQueryBuilder
     end
 
     def evaluate(object)
-      get_operator.evaluate(get_input(object), get_value)
+      object_input = get_input(object)
+      return false if object_input.nil?
+
+      get_operator.evaluate(object_input, get_value)
     end
 
     def get_operator
@@ -21,11 +24,14 @@ module JqueryQueryBuilder
     def get_input(object)
       fields = field.split('.')
       result = object
+
       fields.each do |field|
         result = result[field]
         result = result.first if result.is_a? Array
-        break if result.nil?
+
+        break false if result.nil?
       end
+
       if result.is_a? Array
         result.map{|v| typecast_value(v)}
       else

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe JqueryQueryBuilder::Rule do
-  let(:decimal_rule){
+  let(:decimal_rule) do
     {
       'id' =>     "Decimal_Question",
       'field' =>  "Decimal_Question",
@@ -10,7 +10,17 @@ describe JqueryQueryBuilder::Rule do
       'operator' => "equal",
       'value' =>  "1.2"
     }
-  }
+  end
+  let(:boolean_rule) do
+    {
+      "id" => "Yes_No_Question",
+      "field" => "Yes_No_Question",
+      "type" => "boolean",
+      "input" => "select",
+      "operator" => "equal",
+      "value" => "true"
+    }
+  end
 
   describe '#new' do
     it 'should set the accessors and initialize' do
@@ -85,20 +95,36 @@ describe JqueryQueryBuilder::Rule do
   end
 
   describe '#evaluate' do
-    it 'should evaluate using the operator with the input+value' do
-      rule = JqueryQueryBuilder::Rule.new(decimal_rule)
+    context 'when field for the rule does exist in the passed object' do
+      it 'should evaluate using the operator with the input+value' do
+        rule = JqueryQueryBuilder::Rule.new(decimal_rule)
 
-      operator = JqueryQueryBuilder::Operators::Equal.new
-      input = 1.2
-      value = 1.2
+        operator = JqueryQueryBuilder::Operators::Equal.new
+        input = 1.2
+        value = 1.2
 
-      object = {'Decimal_Question' => input}
+        object = {'Decimal_Question' => input}
 
-      expect(rule).to receive(:get_operator).and_return(operator)
-      expect(rule).to receive(:get_input).with(object).and_return(input)
-      expect(rule).to receive(:get_value).and_return(value)
+        expect(rule).to receive(:get_operator).and_return(operator)
+        expect(rule).to receive(:get_input).with(object).and_return(input)
+        expect(rule).to receive(:get_value).and_return(value)
 
-      expect(rule.evaluate(object)).to eq(true)
+        expect(rule.evaluate(object)).to eq(true)
+      end
+    end
+
+    context 'when field for the rule does not exist in the passed object' do
+      it 'should not evaluate the rule and returns false' do
+        rule = JqueryQueryBuilder::Rule.new(boolean_rule)
+        value = 'true'
+
+        object = {}
+
+        expect(rule).to receive(:get_input).with(object).and_return(false)
+        expect(rule).to receive(:get_value).and_return(value)
+
+        expect(rule.evaluate(object)).to eq(false)
+      end
     end
   end
 end
